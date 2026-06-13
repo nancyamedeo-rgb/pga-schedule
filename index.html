@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PGA Tour Schedule</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;600;700&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg:       #04160a;
+    --surface:  #0a2614;
+    --border:   #1a4a28;
+    --gold:     #c9a84c;
+    --gold-dim: #7a6030;
+    --green:    #2e7d32;
+    --green-hi: #4caf50;
+    --white:    #f0f4f0;
+    --muted:    #7a9e80;
+    --upcoming: #e8f5e9;
+    --past:     #4a6050;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    overflow: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 16px 24px 12px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, #071f0d 0%, var(--bg) 100%);
+    flex-shrink: 0;
+  }
+
+  /* LOGO PLACEHOLDER — replace src with your PGA .jpg */
+  .logo-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 8px;
+    border: 2px dashed var(--gold-dim);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--surface);
+    position: relative;
+  }
+  .logo-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: none; /* shown once src is set */
+  }
+  .logo-placeholder-text {
+    font-size: 9px;
+    color: var(--gold-dim);
+    text-align: center;
+    line-height: 1.3;
+    padding: 4px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .header-text { flex: 1; }
+  .header-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2.4rem;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+    line-height: 1;
+  }
+  .header-sub {
+    font-size: 0.72rem;
+    color: var(--muted);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    margin-top: 3px;
+  }
+
+  .header-date {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .header-date .day {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 2rem;
+    color: var(--green-hi);
+    line-height: 1;
+  }
+  .header-date .month-year {
+    font-size: 0.68rem;
+    color: var(--muted);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  /* ── COLUMN LABELS ── */
+  .col-labels {
+    display: grid;
+    grid-template-columns: 90px 1fr 100px;
+    gap: 0 16px;
+    padding: 7px 24px 6px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  .col-label {
+    font-size: 0.62rem;
+    color: var(--gold-dim);
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    font-weight: 700;
+  }
+  .col-label.right { text-align: right; }
+
+  /* ── SCROLL CONTAINER ── */
+  .scroll-outer {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 6%, black 94%, transparent 100%);
+  }
+
+  .scroll-track {
+    display: flex;
+    flex-direction: column;
+    animation: scrollUp var(--scroll-dur, 40s) linear infinite;
+  }
+  .scroll-track:hover { animation-play-state: paused; }
+
+  @keyframes scrollUp {
+    0%   { transform: translateY(0); }
+    100% { transform: translateY(-50%); }
+  }
+
+  /* ── TOURNAMENT ROW ── */
+  .row {
+    display: grid;
+    grid-template-columns: 90px 1fr 100px;
+    gap: 0 16px;
+    align-items: center;
+    padding: 11px 24px;
+    border-bottom: 1px solid #112218;
+    transition: background 0.2s;
+    position: relative;
+  }
+
+  .row.past   { opacity: 0.42; }
+  .row.next   { background: #0f2e16; }
+  .row.next::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--gold);
+  }
+  .row.major  { background: #0d1f2a; }
+  .row.major::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: #6ab0e8;
+  }
+
+  .row-date {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.1rem;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+    line-height: 1.1;
+  }
+  .row.next .row-date   { color: var(--gold); }
+  .row.major .row-date  { color: #6ab0e8; }
+
+  .row-name {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.2;
+  }
+  .row.past .row-name { color: var(--past); }
+
+  .badge {
+    display: inline-block;
+    font-size: 0.52rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 3px;
+    margin-left: 6px;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+  }
+  .badge-next  { background: var(--gold); color: #000; }
+  .badge-major { background: #6ab0e8; color: #000; }
+
+  .row-status {
+    font-size: 0.72rem;
+    text-align: right;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+  .status-upcoming { color: var(--green-hi); }
+  .status-past     { color: var(--past); }
+  .status-next     { color: var(--gold); }
+
+  /* ── FOOTER ── */
+  .footer {
+    padding: 7px 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .footer-note {
+    font-size: 0.6rem;
+    color: var(--muted);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .pulse {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green-hi);
+    display: inline-block;
+    margin-right: 6px;
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%,100% { opacity: 1; transform: scale(1); }
+    50%      { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  /* full-page flex */
+  body { display: flex; flex-direction: column; }
+</style>
+</head>
+<body>
+
+<!-- ══════════ HEADER ══════════ -->
+<header class="header">
+
+  <!-- 🔧 TO ADD YOUR PGA LOGO:
+       1. Place your .jpg next to this HTML file (e.g. pga_logo.jpg)
+       2. Set img src="pga_logo.jpg" below
+       3. Remove the logo-placeholder-text div
+  -->
+  <div class="logo-wrap">
+    <img src="" alt="PGA Tour Logo" id="pga-logo">
+    <div class="logo-placeholder-text" id="logo-hint">PGA<br>LOGO<br>HERE</div>
+  </div>
+
+  <div class="header-text">
+    <div class="header-title">PGA Tour Schedule</div>
+    <div class="header-sub">2025–2026 Season &nbsp;·&nbsp; All times Thursday tee-off</div>
+  </div>
+
+  <div class="header-date">
+    <div class="day" id="live-day">—</div>
+    <div class="month-year" id="live-month">—</div>
+  </div>
+</header>
+
+<!-- ══════════ COLUMN LABELS ══════════ -->
+<div class="col-labels">
+  <span class="col-label">Date</span>
+  <span class="col-label">Tournament</span>
+  <span class="col-label right">Status</span>
+</div>
+
+<!-- ══════════ SCROLLING LIST ══════════ -->
+<div class="scroll-outer">
+  <div class="scroll-track" id="track"></div>
+</div>
+
+<!-- ══════════ FOOTER ══════════ -->
+<footer class="footer">
+  <span class="footer-note"><span class="pulse"></span>Live Display</span>
+  <span class="footer-note">Source: PGA Tour / SportRadar</span>
+</footer>
+
+<script>
+// ── Tournament data (fetched live) ──
+const TOURNAMENTS = [
+  { date: "Jan 8",  label: "Jan\n8",  name: "The Sentry",                                    status: "past"     },
+  { date: "Jan 15", label: "Jan\n15", name: "Sony Open in Hawaii",                            status: "past"     },
+  { date: "Jan 22", label: "Jan\n22", name: "The American Express",                           status: "past"     },
+  { date: "Jan 29", label: "Jan\n29", name: "Farmers Insurance Open",                         status: "past"     },
+  { date: "Feb 5",  label: "Feb\n5",  name: "WM Phoenix Open",                                status: "past"     },
+  { date: "Feb 12", label: "Feb\n12", name: "AT&T Pebble Beach Pro-Am",                       status: "past"     },
+  { date: "Feb 19", label: "Feb\n19", name: "The Genesis Invitational",                       status: "past"     },
+  { date: "Feb 26", label: "Feb\n26", name: "Cognizant Classic in The Palm Beaches",          status: "past"     },
+  { date: "Mar 5",  label: "Mar\n5",  name: "Arnold Palmer Invitational pres. by Mastercard", status: "past"     },
+  { date: "Mar 5",  label: "Mar\n5",  name: "Puerto Rico Open",                               status: "past"     },
+  { date: "Mar 12", label: "Mar\n12", name: "THE PLAYERS Championship",                       status: "past", major: true },
+  { date: "Mar 19", label: "Mar\n19", name: "Valspar Championship",                           status: "past"     },
+  { date: "Mar 26", label: "Mar\n26", name: "Texas Children's Houston Open",                  status: "past"     },
+  { date: "Apr 2",  label: "Apr\n2",  name: "Valero Texas Open",                              status: "past"     },
+  { date: "Apr 9",  label: "Apr\n9",  name: "Masters Tournament",                             status: "past", major: true },
+  { date: "Apr 16", label: "Apr\n16", name: "RBC Heritage",                                   status: "past"     },
+  { date: "Apr 23", label: "Apr\n23", name: "Zurich Classic of New Orleans",                  status: "past"     },
+  { date: "Apr 30", label: "Apr\n30", name: "Cadillac Championship",                          status: "past"     },
+  { date: "May 7",  label: "May\n7",  name: "Truist Championship",                            status: "past"     },
+  { date: "May 7",  label: "May\n7",  name: "ONEflight Myrtle Beach Classic",                 status: "past"     },
+  // Upcoming — fill in as schedule releases
+  { date: "May 14", label: "May\n14", name: "PGA Championship",                               status: "upcoming", major: true },
+  { date: "May 21", label: "May\n21", name: "Charles Schwab Challenge",                       status: "upcoming" },
+  { date: "May 28", label: "May\n28", name: "the Memorial Tournament pres. by Workday",       status: "upcoming" },
+  { date: "Jun 11", label: "Jun\n11", name: "U.S. Open",                                      status: "upcoming", major: true },
+  { date: "Jun 18", label: "Jun\n18", name: "Travelers Championship",                         status: "upcoming" },
+  { date: "Jun 25", label: "Jun\n25", name: "Rocket Classic",                                 status: "upcoming" },
+  { date: "Jul 2",  label: "Jul\n2",  name: "John Deere Classic",                             status: "upcoming" },
+  { date: "Jul 16", label: "Jul\n16", name: "The Open Championship",                          status: "upcoming", major: true },
+  { date: "Jul 23", label: "Jul\n23", name: "3M Open",                                       status: "upcoming" },
+  { date: "Jul 30", label: "Jul\n30", name: "Olympic Games Men's Golf",                       status: "upcoming" },
+  { date: "Aug 6",  label: "Aug\n6",  name: "Wyndham Championship",                           status: "upcoming" },
+  { date: "Aug 13", label: "Aug\n13", name: "FedEx St. Jude Championship",                    status: "upcoming" },
+  { date: "Aug 20", label: "Aug\n20", name: "BMW Championship",                               status: "upcoming" },
+  { date: "Aug 27", label: "Aug\n27", name: "TOUR Championship",                              status: "upcoming" },
+];
+
+// Mark the first upcoming as "next"
+let markedNext = false;
+const rows = TOURNAMENTS.map(t => {
+  if (!markedNext && t.status === 'upcoming') {
+    markedNext = true;
+    return { ...t, next: true };
+  }
+  return t;
+});
+
+// ── Live date ──
+function updateClock() {
+  const now = new Date();
+  const opts = { weekday: 'short', month: 'short', day: 'numeric' };
+  const parts = now.toLocaleDateString('en-US', opts).split(', ');
+  document.getElementById('live-day').textContent  = now.toLocaleDateString('en-US',{weekday:'short'}).toUpperCase() + ' ' + now.getDate();
+  document.getElementById('live-month').textContent = now.toLocaleDateString('en-US',{month:'long'}) + ' ' + now.getFullYear();
+}
+updateClock();
+setInterval(updateClock, 60000);
+
+// ── Daily refresh at midnight ──
+// Calculates ms until next midnight and reloads the page then,
+// so "past / upcoming / next" statuses stay accurate day-to-day.
+function scheduleMidnightRefresh() {
+  const now = new Date();
+  const nextMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 5);
+  const msUntilMidnight = nextMidnight - now;
+  console.log(`[PGA Widget] Next refresh in ${Math.round(msUntilMidnight / 60000)} min`);
+  setTimeout(() => { location.reload(); }, msUntilMidnight);
+}
+scheduleMidnightRefresh();
+
+// ── Logo swap helper ──
+// If img src is set by operator, show img and hide placeholder text
+const logoImg = document.getElementById('pga-logo');
+if (logoImg.src && !logoImg.src.endsWith('/')) {
+  logoImg.style.display = 'block';
+  document.getElementById('logo-hint').style.display = 'none';
+}
+
+// ── Build rows (doubled for seamless loop) ──
+function buildRows() {
+  const track = document.getElementById('track');
+  track.innerHTML = '';
+
+  function makeRowHTML(t) {
+    let cls = 'row';
+    if (t.status === 'past')     cls += ' past';
+    if (t.next)                  cls += ' next';
+    if (t.major && !t.next)      cls += ' major';
+
+    const dateLine = t.date.replace('\n', '<br>');
+    let nameLine = t.name;
+    if (t.next)  nameLine += ' <span class="badge badge-next">Next</span>';
+    if (t.major && !t.next) nameLine += ' <span class="badge badge-major">Major</span>';
+
+    let statusLabel = '';
+    let statusClass = '';
+    if (t.next)              { statusLabel = 'Up Next'; statusClass = 'status-next'; }
+    else if (t.status === 'upcoming') { statusLabel = 'Upcoming'; statusClass = 'status-upcoming'; }
+    else                              { statusLabel = 'Completed'; statusClass = 'status-past'; }
+
+    return `<div class="${cls}">
+      <div class="row-date">${dateLine}</div>
+      <div class="row-name">${nameLine}</div>
+      <div class="row-status ${statusClass}">${statusLabel}</div>
+    </div>`;
+  }
+
+  // Double the list so the loop is seamless
+  const html = rows.map(makeRowHTML).join('') + rows.map(makeRowHTML).join('');
+  track.innerHTML = html;
+
+  // Set scroll speed: ~5s per row
+  const totalRows = rows.length;
+  const rowHeight = 44; // px approx
+  const duration = totalRows * 5;
+  track.style.setProperty('--scroll-dur', duration + 's');
+  document.documentElement.style.setProperty('--scroll-dur', duration + 's');
+}
+
+buildRows();
+</script>
+</body>
+</html>
