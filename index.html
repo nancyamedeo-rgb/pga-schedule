@@ -415,7 +415,7 @@ function buildRows() {
   // Set scroll speed: ~5s per row
   const totalRows = rows.length;
   const rowHeight = 44; // px approx
-  const duration = totalRows * 5;
+  const duration = totalRows * 2;
   track.style.setProperty('--scroll-dur', duration + 's');
   document.documentElement.style.setProperty('--scroll-dur', duration + 's');
 }
