@@ -48,7 +48,7 @@
     width: 72px;
     height: 72px;
     border-radius: 8px;
-    border: 2px dashed var(--gold-dim);
+    border: none;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -265,7 +265,7 @@
        3. Remove the logo-placeholder-text div
   -->
   <div class="logo-wrap">
-    <img src="pga_logo.jpg" alt="PGA Tour Logo" id="pga-logo">
+    <img src="" alt="PGA Tour Logo" id="pga-logo">
     <div class="logo-placeholder-text" id="logo-hint">PGA<br>LOGO<br>HERE</div>
   </div>
 
@@ -415,7 +415,7 @@ function buildRows() {
   // Set scroll speed: ~5s per row
   const totalRows = rows.length;
   const rowHeight = 44; // px approx
-  const duration = totalRows * 2;
+  const duration = totalRows * 5;
   track.style.setProperty('--scroll-dur', duration + 's');
   document.documentElement.style.setProperty('--scroll-dur', duration + 's');
 }
