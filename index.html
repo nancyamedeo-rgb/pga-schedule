@@ -363,10 +363,13 @@ function computeRows() {
     return { ...t, status: isPast ? 'past' : 'upcoming' };
   });
 
-  // Mark the first non-past tournament as "next"
+  // Drop past tournaments entirely — only current/upcoming remain
+  const upcomingOnly = processed.filter(t => t.status !== 'past');
+
+  // Mark the first remaining tournament as "next"
   let markedNext = false;
-  return processed.map(t => {
-    if (!markedNext && t.status === 'upcoming') {
+  return upcomingOnly.map(t => {
+    if (!markedNext) {
       markedNext = true;
       return { ...t, next: true };
     }
@@ -414,7 +417,6 @@ function buildRows() {
 
   function makeRowHTML(t) {
     let cls = 'row';
-    if (t.status === 'past')     cls += ' past';
     if (t.next)                  cls += ' next';
     if (t.major && !t.next)      cls += ' major';
 
@@ -425,9 +427,8 @@ function buildRows() {
 
     let statusLabel = '';
     let statusClass = '';
-    if (t.next)              { statusLabel = 'Up Next'; statusClass = 'status-next'; }
-    else if (t.status === 'upcoming') { statusLabel = 'Upcoming'; statusClass = 'status-upcoming'; }
-    else                              { statusLabel = 'Completed'; statusClass = 'status-past'; }
+    if (t.next) { statusLabel = 'Up Next'; statusClass = 'status-next'; }
+    else        { statusLabel = 'Upcoming'; statusClass = 'status-upcoming'; }
 
     return `<div class="${cls}">
       <div class="row-date">${dateLine}</div>
